@@ -24,7 +24,8 @@ import java.util.Properties;
 
 public class BaseClass {
     private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
-    public Logger logger= LogManager.getLogger(this.getClass());;
+    public Logger logger = LogManager.getLogger(this.getClass());
+    ;
     public Properties p;
 
     // Getter for WebDriver
@@ -35,38 +36,43 @@ public class BaseClass {
     @BeforeClass
     @Parameters({"browser"})
     public void setUp(String br) throws IOException, InterruptedException {
-        FileReader config=new FileReader(".//src//test//resources//config.properties");
-        p=new Properties();
+        FileReader config = new FileReader(".//src//test//resources//config.properties");
+        p = new Properties();
         p.load(config);
 
 
         WebDriver wd = null;
-        switch (br.toLowerCase()){
-            case "chrome" :
-                wd=new ChromeDriver();
+        switch (br.toLowerCase()) {
+            case "chrome":
+                wd = new ChromeDriver();
                 break;
-            case "firefox" :
-                wd=new FirefoxDriver();
+            case "firefox":
+                wd = new FirefoxDriver();
                 break;
-            case "edge" :
+            case "edge":
                 System.setProperty("webdriver.edge.driver", "C:\\msedgedriver.exe");
-                wd=new EdgeDriver();
+                wd = new EdgeDriver();
                 break;
             default:
                 System.out.println("Invalid browser...");
                 return;
         }
         driver.set(wd);
+
         getDriver().manage().deleteAllCookies();
         getDriver().manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         getDriver().get(p.getProperty("appURL"));
         getDriver().manage().window().maximize();
 
+    }
+
+    public void login() throws InterruptedException{
         // Enter email
         getDriver().findElement(By.xpath("//input[@type='email']")).sendKeys(p.getProperty("email"));
         getDriver().findElement(By.xpath("//input[@type='submit']")).click();
 
         // Enter password
+        Thread.sleep(3000);
         WebDriverWait wait = new WebDriverWait(getDriver(), Duration.ofSeconds(10));
         wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//input[@type='password']")));
         getDriver().findElement(By.xpath("//input[@type='password']")).sendKeys(p.getProperty("password"));
@@ -78,14 +84,12 @@ public class BaseClass {
         // Click "Yes" (Stay signed in button)
         WebElement clickToYes = wait.until(ExpectedConditions.elementToBeClickable(By.id("idSIButton9")));
         clickToYes.click();
-
-
     }
 
     @AfterClass
-    public void tearDown(){
+    public void tearDown() {
         if (getDriver() != null) {
-//            getDriver().quit();
+            getDriver().quit();
             driver.remove();
         }
     }
