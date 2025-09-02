@@ -9,11 +9,12 @@ public class TC001_LogIn extends BaseClass {
     public void verifyLogin(){
         logger.info("****** Starting the Log in Test Case *****************");
         try {
-
+            login();
         }
         catch (Exception | AssertionError e){
             logger.error("Test case failed ...");
             Assert.fail();
         }
+        logger.info("************ Test Case Finished *************************");
     }
 }
