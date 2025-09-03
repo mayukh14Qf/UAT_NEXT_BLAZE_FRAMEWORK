@@ -1,7 +1,6 @@
 package testBase;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.*;
@@ -25,7 +24,6 @@ import java.util.Properties;
 public class BaseClass {
     private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
     public Logger logger = LogManager.getLogger(this.getClass());
-    ;
     public Properties p;
 
     // Getter for WebDriver
@@ -66,6 +64,15 @@ public class BaseClass {
 
     }
 
+    @AfterClass
+    public void tearDown() {
+        if (getDriver() != null) {
+            getDriver().quit();
+            driver.remove();
+        }
+    }
+
+    //log in to site
     public void login() throws InterruptedException{
         // Enter email
         getDriver().findElement(By.xpath("//input[@type='email']")).sendKeys(p.getProperty("email"));
@@ -84,14 +91,6 @@ public class BaseClass {
         // Click "Yes" (Stay signed in button)
         WebElement clickToYes = wait.until(ExpectedConditions.elementToBeClickable(By.id("idSIButton9")));
         clickToYes.click();
-    }
-
-    @AfterClass
-    public void tearDown() {
-        if (getDriver() != null) {
-            getDriver().quit();
-            driver.remove();
-        }
     }
 
     // Capture screenshot (Thread-safe)
