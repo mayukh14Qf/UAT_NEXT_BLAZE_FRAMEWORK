@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -42,7 +43,9 @@ public class BaseClass {
         WebDriver wd = null;
         switch (br.toLowerCase()) {
             case "chrome":
-                wd = new ChromeDriver();
+                ChromeOptions options = new ChromeOptions();
+                options.addArguments("--incognito");
+                wd = new ChromeDriver(options);
                 break;
             case "firefox":
                 wd = new FirefoxDriver();
@@ -65,32 +68,43 @@ public class BaseClass {
     }
 
     @AfterClass
-    public void tearDown() {
+    public void tearDown() throws InterruptedException {
         if (getDriver() != null) {
-            getDriver().quit();
+            logout();
+           getDriver().quit();
             driver.remove();
         }
     }
 
+    public void logout() throws InterruptedException {
+        Thread.sleep(2000);
+        ((JavascriptExecutor) getDriver()).executeScript("arguments[0].click();",getDriver().findElement(By.xpath("//img[@id='chevron-logout']")));
+        WebElement logOut=getDriver().findElement(By.xpath("//a[normalize-space()='Logout']"));
+        ((JavascriptExecutor) getDriver()).executeScript("arguments[0].click();",logOut);
+        ((JavascriptExecutor) getDriver()).executeScript("arguments[0].click();",getDriver().findElement(By.xpath("//div[@data-bind='text: ((session.isSignedIn || session.isSamsungSso) && session.unsafe_fullName) || session.unsafe_displayName']")));
+
+    }
     //log in to site
     public void login() throws InterruptedException{
-        // Enter email
+
         getDriver().findElement(By.xpath("//input[@type='email']")).sendKeys(p.getProperty("email"));
         getDriver().findElement(By.xpath("//input[@type='submit']")).click();
 
-        // Enter password
+
         Thread.sleep(3000);
         WebDriverWait wait = new WebDriverWait(getDriver(), Duration.ofSeconds(10));
         wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//input[@type='password']")));
         getDriver().findElement(By.xpath("//input[@type='password']")).sendKeys(p.getProperty("password"));
 
-        // Re-locate submit button after password field loads (avoid stale element)
+
         WebElement submitBtn = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//input[@type='submit']")));
         submitBtn.click();
 
-        // Click "Yes" (Stay signed in button)
+
         WebElement clickToYes = wait.until(ExpectedConditions.elementToBeClickable(By.id("idSIButton9")));
         clickToYes.click();
+        Thread.sleep(6000);
+        getDriver().navigate().refresh();
     }
 
     // Capture screenshot (Thread-safe)
@@ -103,5 +117,13 @@ public class BaseClass {
 
         FileUtils.copyFile(source, target);
         return targetPath;
+    }
+
+    // Wait for page to fully load (useful for Blazor apps after navigation)
+    public void waitForPageLoad() {
+        new WebDriverWait(getDriver(), Duration.ofSeconds(20)).until(
+                webDriver -> ((JavascriptExecutor) webDriver)
+                        .executeScript("return document.readyState").equals("complete")
+        );
     }
 }
